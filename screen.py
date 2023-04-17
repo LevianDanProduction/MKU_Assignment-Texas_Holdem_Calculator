@@ -40,10 +40,13 @@ class ImgEngine():
         self.deckImgGen()
         self.pot = "images/other/pot.png"
         self.title = "images/other/title.png"
+        self.textFont_xs = pygame.font.Font("images/font/pio.otf",16)
         self.textFont_s = pygame.font.Font("images/font/pio.otf",24)
         self.textFont_m = pygame.font.Font("images/font/pio.otf",36)
         self.images = []
-        self.imgGen()
+        self.imgGen("ui")
+        #self.imgGen("Cards (small)")
+        self.imgGen("Cards (medium)")
     
     def deckImgGen(self):
         for i in self.cardImg[1]:
@@ -54,10 +57,16 @@ class ImgEngine():
                 self.cardGen.append(item2)
         return (self.deckGen,self.cardGen)
     
-    def imgGen(self):
-        for file in os.listdir("images/ui"):
+    def cardToImg(self,cardinfo):
+        for i in self.cardImg[1]:
+            for j in self.cardImg[2]:
+                if cardinfo == (i,j):
+                    return self.cardImg[0] + "_" + i + "_" + j 
+    
+    def imgGen(self,area):
+        for file in os.listdir("images/"+area):
             if file.endswith(".jpg") or file.endswith(".png"):
-                self.images.append((file[:-4],pygame.image.load("images/ui/" + file)))
+                self.images.append((file[:-4],pygame.image.load("images/"+area+"/" + file)))
     
     def getImg(self,img):
         for i in self.images:
@@ -415,13 +424,62 @@ class Community():
         #screen.blit(self.potimg,(self.x,self.y))
     
 
+class CustomImg:
+    def __init__(self,image,sound,parent,name="img",imgname="dice_1",imginfo=None,offset=(0,0)):
+        self.name = name
+        if name == "card":
+            self.cardId = imginfo
+        else:
+            self.cardId = None
+        self.img = image
+        self.sound = sound
+        self.x = 0
+        self.y = 0
+        self.displacement = offset
+        self.imgname = imgname
+        self.front = None
+        self.parent = parent
+        self.imgSet()
+
+    def imgSet(self):
+        if self.cardId:
+            self.front = self.img.getImg(self.img.cardToImg((self.cardId[0],self.cardId[1])))
+        else:
+            self.front = self.img.getImg(self.imgname)
+    
+    def positionType(self):
+        if self.parent.name == "info":
+            self.x = self.parent.x + 21*self.displacement[0]
+            self.y = self.parent.y 
+    
+    def update(self):
+        print(self.front,self.cardId)
+        self.positionType()
+        screen.blit(self.front,(self.x,self.y))
 
 class PokerFunc():
 
-    def changeVal(value,change):
-        value = value + change
-        print(value)
-        return value
+    def __init__(self,image,sound,place=(0,0),player=None):
+        self.name = "info"
+        self.img = image
+        self.sound = sound
+        self.imagecards = []
+        self.x = place[0]
+        self.y = place[1]
+        if player:
+            self.genSet(player)
+        else:
+            self.genSet()
+    
+    def genSet(self,cards=[]): # test=[("hearts","A"),("hearts","09"),("clubs","Q")])
+        temp = 0
+        for i in cards:
+            self.imagecards.append(CustomImg(self.img,self.sound,self,name="card",imginfo=(i[0],i[1]),offset=(temp,0)))
+            temp += 1
+
+    def update(self):
+        for i in self.imagecards:
+            i.update()
         
     
 class Menu():
@@ -466,7 +524,11 @@ class Menu():
         self.currentObj.append(ImgButton(self.img.getImg("start"),760,500,onclickFunction=self.start_game,name="select",onePress=True))
         #self.currentText.append
     def mainGame(self):
-        self.currentObj.append(ImgButton(self.img.getImg("proceed"),760,530,onclickFunction=self.blank,name="select",onePress=True))
+        self.currentText.append([self.img.textFont_m.render(self.parent.part,False,(255,255,255)),(740,20),False])
+        self.currentText.append([self.img.textFont_xs.render("Press F to progress",False,(255,255,255)),(750,590),False])
+        self.currentObj.append(PokerFunc(self.img,self.sound,(740,70),player=self.parent.playerHand))
+        self.currentObj.append(PokerFunc(self.img,self.sound,(740,140),player=self.parent.communityHand))
+        #self.currentObj.append(ImgButton(self.img.getImg("proceed"),760,530,onclickFunction=self.blank,name="select",onePress=True))
     def noScreen(self):
         pass
 
@@ -530,8 +592,11 @@ class Game():
         self.state = ""
         self.menu = Menu(image,sound,self)
         self.players = 1
+        self.part = "Poker"
         self.phase = 0
         self.groups = None
+        self.playerHand = None
+        self.communityHand = None
         #self.menu.preGame()
 
     def draw(self,playerhand,otherhands,deck,community):
@@ -544,28 +609,44 @@ class Game():
         for i in range(5):
             deck.drawCard(community)
 
+    def grabPlayerHand(self):
+        self.playerHand = []
+        for i in self.groups[0].cards:
+            self.playerHand.append((i.suit,i.value))
+    def grabCommunityHand(self):
+        self.communityHand = []
+        for i in self.groups[3].cards:
+            self.communityHand.append((i.suit,i.value))
+
     def phaseGame(self):
         if self.phase == 1:
-            print("\n\n\n\n\n\n\n_____________Pre-Flop_____________")
+            print("\n\n\n\n\n\n\n_____________Pre Flop_____________")
+            self.part = "Pre Flop"
             self.draw(*self.groups)
+            self.grabPlayerHand()
+            self.grabCommunityHand()
             self.sound.soundPlay("round")
 
         if self.phase == 2:
             print("\n\n\n\n\n\n\n_____________Flop_____________") 
+            self.part = "Flop"
             self.groups[3].flipCards((0,3))
             self.sound.soundPlay("card-flip-3")
         if self.phase == 3:
             print("\n\n\n\n\n\n\n_____________Turn_____________") 
+            self.part = "Turn"
             self.groups[3].flipCards((0,4))
             self.sound.soundPlay("card-flip-3")
 
         if self.phase == 4:
             print("\n\n\n\n\n\n\n_____________River_____________") 
+            self.part = "River"
             self.groups[3].flipCards((0,5))
             self.sound.soundPlay("card-flip-3")
 
         if self.phase == 5:
             print("\n\n\n\n\n\n\n_____________Reveal_____________") 
+            self.part = "Reveal"
             self.groups[3].flipCards((0,5))
             for i in self.groups[1]:
                 for j in reversed(i.cards):
@@ -574,6 +655,7 @@ class Game():
 
         if self.phase == 6:
             print("\n\n\n\n\n\n\n_____________End_____________") 
+            self.part = "End"
             self.phase = 0
             self.cleanup(*self.groups)
             self.sound.soundPlay("round")
@@ -765,9 +847,13 @@ def mainGame(program):
             i.update()
             
         for i in temphand:
+            i.update()
+
+        for i in temphand:
             for j in i.cards:
                 j.update()
-            i.update()
+            
+            
         for i in commune.cards:
             i.update()
 
