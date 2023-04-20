@@ -6,20 +6,23 @@ import time
 
 
 # Define the deck of cards
-deck = ['2♥ ', '2♦', '2♣', '2♠', '3♥ ', '3♦', '3♣', '3♠',
-        '4♥ ', '4♦', '4♣', '4♠', '5♥ ', '5♦', '5♣', '5♠',
-        '6♥ ', '6♦', '6♣', '6♠', '7♥ ', '7♦', '7♣', '7♠',
-        '8♥ ', '8♦', '8♣', '8♠', '9♥ ', '9♦', '9♣', '9♠',
-        '10♥ ', '10♦', '10♣', '10♠', 'j♥', 'j♦', 'j♣', 'j♠',
+deck = ['2♥', '2♦', '2♣', '2♠', '3♥', '3♦', '3♣', '3♠',
+        '4♥', '4♦', '4♣', '4♠', '5♥', '5♦', '5♣', '5♠',
+        '6♥', '6♦', '6♣', '6♠', '7♥', '7♦', '7♣', '7♠',
+        '8♥', '8♦', '8♣', '8♠', '9♥', '9♦', '9♣', '9♠',
+        '10♥', '10♦', '10♣', '10♠', 'j♥', 'j♦', 'j♣', 'j♠',
         'q♥', 'q♦', 'q♣', 'q♠', 'k♥', 'k♦', 'k♣', 'k♠',
         'a♥', 'a♦', 'a♣', 'a♠']
 
 # Define a function to sort the cards by power
 def card_power(card):
-    rank = card[:-1]
-    power_map = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'j': 11, 'q': 12, 'k': 13, 'a': 14}
-    return power_map[rank]
+    card = card.strip()
+    rank_value = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'j': 11, 'q': 12, 'k': 13, 'a': 14}
+    suit_value = {'♠': 1, '♣': 2, '♦': 3, '♥': 4}
+    return (suit_value[card[-1]], rank_value[card[:-1].lower()])
 
+def sort_hand(hand):
+    return sorted(hand, key=card_power)
 # Sort the deck by power
 #sorted_deck = sorted(deck, key=card_power)
 
@@ -30,6 +33,8 @@ comb_start_time = time.perf_counter()
 
 # Generate all combinations of 5 cards from the sorted deck
 card_combinations = list(itertools.combinations(deck, 5))
+card_combinations = [sort_hand(comb) for comb in card_combinations]
+print(card_combinations[:20])
 
 comb_end_time = time.perf_counter()
 comb_elapsed = comb_end_time - comb_start_time
@@ -51,7 +56,7 @@ def collectTie(x):
 
 join_start_time = time.perf_counter()
 
-df = pd.DataFrame([' '.join(i) for i in card_combinations],columns=["hand"])
+df = pd.DataFrame([' '.join(i).strip() for i in card_combinations],columns=["hand"])
 print(df)
 
 
@@ -69,7 +74,7 @@ cards["tie"] = cards["hand"].apply(collectTie)
 print("Ties done in")
 print(cards[:20])
 
-cards.to_csv("cards.csv")
+cards.to_csv("cards4.csv")
 
 
 rank_end_time = time.perf_counter()

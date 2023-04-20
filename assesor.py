@@ -21,7 +21,7 @@ def straightflush(hand):
     first, rest = ordered[0], ordered[1:]
     if ( all(card.suit == first.suit for card in rest) and
          ' '.join(card.face for card in ordered) in fs ):
-        return 'straight-flush', ordered[-1].face
+        return 'straight-flush', [ordered[-1].face]
     return False
 
 def fourofakind(hand):
@@ -63,7 +63,7 @@ def straight(hand):
     ordered = sorted(hand, key=lambda card: (f.index(card.face), card.suit))
     first, rest = ordered[0], ordered[1:]
     if ' '.join(card.face for card in ordered) in fs:
-        return 'straight', ordered[-1].face
+        return 'straight', [ordered[-1].face]
     return False
 
 def threeofakind(hand):

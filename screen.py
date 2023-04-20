@@ -8,6 +8,9 @@ import math
 from functools import partial
 from pygame.math import Vector2
 import numpy as np
+import rank_compare
+import itertools
+import mathymath
 
 
 size = 240
@@ -43,6 +46,7 @@ class ImgEngine():
         self.textFont_xs = pygame.font.Font("images/font/pio.otf",16)
         self.textFont_s = pygame.font.Font("images/font/pio.otf",24)
         self.textFont_m = pygame.font.Font("images/font/pio.otf",36)
+        self.textFont_num_xs = pygame.font.Font("images/font/pau.tff",16)
         self.images = []
         self.imgGen("ui")
         #self.imgGen("Cards (small)")
@@ -453,7 +457,7 @@ class CustomImg:
             self.y = self.parent.y 
     
     def update(self):
-        print(self.front,self.cardId)
+        #print(self.front,self.cardId)
         self.positionType()
         screen.blit(self.front,(self.x,self.y))
 
@@ -526,8 +530,21 @@ class Menu():
     def mainGame(self):
         self.currentText.append([self.img.textFont_m.render(self.parent.part,False,(255,255,255)),(740,20),False])
         self.currentText.append([self.img.textFont_xs.render("Press F to progress",False,(255,255,255)),(750,590),False])
-        self.currentObj.append(PokerFunc(self.img,self.sound,(740,70),player=self.parent.playerHand))
-        self.currentObj.append(PokerFunc(self.img,self.sound,(740,140),player=self.parent.communityHand))
+        self.currentText.append([self.img.textFont_xs.render("Player Hand",False,(255,255,255)),(740,70),False])
+        self.currentText.append([self.img.textFont_xs.render("Community",False,(255,255,255)),(740,130),False])
+        self.currentObj.append(PokerFunc(self.img,self.sound,(740,90),player=self.parent.playerHand))
+        self.currentObj.append(PokerFunc(self.img,self.sound,(740,150),player=self.parent.communityHand))
+        if self.parent.handsToUse or not self.parent.handsToUse == []:
+            #print("added eval",self.parent.handsToUse)
+            for j,i in enumerate(self.parent.handsToUse):
+                #print("hand:    ", i)
+                #print("Format:   ",rank_compare.fromFormatHand(i[0]))
+                self.currentObj.append(PokerFunc(self.img,self.sound,(740,(220 + 50*j)),player=rank_compare.fromFormatHand(i[0])))
+                self.currentText.append([self.img.textFont_xs.render(i[1].replace('-',' '),False,(255,255,255)),(755,250+50*j),False])
+                self.currentText.append([self.img.textFont_num_xs.render(str(mathymath.poker_probabilitie(i[1])),False,(255,255,255)),(900,230+50*j),False])
+                if j == 0:
+                    break
+        self.currentText.append([self.img.textFont_xs.render("Best Hands",False,(255,255,255)),(740,200),False])
         #self.currentObj.append(ImgButton(self.img.getImg("proceed"),760,530,onclickFunction=self.blank,name="select",onePress=True))
     def noScreen(self):
         pass
@@ -569,6 +586,7 @@ class ImgButton():
         self.alreadyPressed = False
         self.buttonRect = pygame.Rect(self.x,self.y,self.img.get_width(),self.img.get_height())
 
+
     def update(self):
         mouse = pygame.mouse.get_pos()
         if self.buttonRect.collidepoint(mouse):
@@ -597,6 +615,8 @@ class Game():
         self.groups = None
         self.playerHand = None
         self.communityHand = None
+        self.handsToUse = []
+        self.rev = 0
         #self.menu.preGame()
 
     def draw(self,playerhand,otherhands,deck,community):
@@ -613,10 +633,48 @@ class Game():
         self.playerHand = []
         for i in self.groups[0].cards:
             self.playerHand.append((i.suit,i.value))
+            print(i.suit,i.value)
     def grabCommunityHand(self):
         self.communityHand = []
         for i in self.groups[3].cards:
             self.communityHand.append((i.suit,i.value))
+
+    def grabEvaluation(self):
+        communityHand = []
+        for i in self.groups[3].cards:
+            communityHand.append(rank_compare.toFormat((i.value,i.suit)))
+        playerHand = []
+        for i in self.groups[0].cards:
+            playerHand.append(rank_compare.toFormat((i.value,i.suit)))
+        enemyHands = []
+        for j in self.groups[1]:
+            temp = ""
+            for i in j.cards:
+                temp = temp + rank_compare.toFormat((i.value,i.suit))
+            enemyHands.append(temp)
+        
+        playerOptions = playerHand + communityHand[:self.rev]
+        print(communityHand[:self.rev])
+        enemyOptions = []
+        self.handsToUse = []
+        #for i in enemyHands:
+        #    enemyOptions.append(list(i+communityHand))
+        
+        options = rank_compare.gameComp(playerOptions)
+        #print(options)
+        strongest = rank_compare.strongestHand(options)
+        #print(strongest)
+        pick = strongest[1][0]
+        for i in strongest[1]:
+            self.handsToUse.append([options[i],strongest[2][i][1]])
+        #self.handsToUse.append([options[pick],strongest[2][pick][1]])
+        print(self.handsToUse)
+        
+
+
+
+        
+
 
     def phaseGame(self):
         if self.phase == 1:
@@ -626,23 +684,31 @@ class Game():
             self.grabPlayerHand()
             self.grabCommunityHand()
             self.sound.soundPlay("round")
+            self.rev = 0
+
 
         if self.phase == 2:
             print("\n\n\n\n\n\n\n_____________Flop_____________") 
             self.part = "Flop"
             self.groups[3].flipCards((0,3))
             self.sound.soundPlay("card-flip-3")
+            self.rev = 3
+            self.grabEvaluation()
         if self.phase == 3:
             print("\n\n\n\n\n\n\n_____________Turn_____________") 
             self.part = "Turn"
             self.groups[3].flipCards((0,4))
             self.sound.soundPlay("card-flip-3")
+            self.rev = 4
+            self.grabEvaluation()
 
         if self.phase == 4:
             print("\n\n\n\n\n\n\n_____________River_____________") 
             self.part = "River"
             self.groups[3].flipCards((0,5))
             self.sound.soundPlay("card-flip-3")
+            self.rev = 5
+            self.grabEvaluation()
 
         if self.phase == 5:
             print("\n\n\n\n\n\n\n_____________Reveal_____________") 
@@ -825,6 +891,10 @@ def mainGame(program):
                 if event.key == pygame.K_u:
                     commune.flipCards((0,5))
                     musicEngine.soundPlay("submit")
+                if event.key == pygame.K_r:
+                    game.grabEvaluation()
+                    musicEngine.soundPlay("submit")
+
                     # Check if mouse button is down
                 if pygame.mouse.get_pressed()[0]:
                     # Wait for mouse button to be released
