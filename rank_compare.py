@@ -136,7 +136,6 @@ def strongestHand(hands):
             if power_mapper(j[2][i]) > power_mapper(biggest[i]):
                 biggest = j[2]
                 bigaf = j
-                
                 orderbreak = [item for item in orderbreak if item[2][i]==biggest[i]]
                 print(len(orderbreak),":order:    ",orderbreak)
     if orderbreak == []:

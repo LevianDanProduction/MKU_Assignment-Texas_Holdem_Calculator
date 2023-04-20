@@ -71,7 +71,7 @@ def poker_probabilitie(hand_type,retu="prob"):
     if retu == "prob":
         probability = hand_probabilities.get(hand_type, None)
         if probability is not None:
-            return f"{probability * 100:.10f}%"
+            return f"{probability * 100:.2f}%"
         else:
             return "Invalid hand type"
     else:

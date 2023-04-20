@@ -46,7 +46,8 @@ class ImgEngine():
         self.textFont_xs = pygame.font.Font("images/font/pio.otf",16)
         self.textFont_s = pygame.font.Font("images/font/pio.otf",24)
         self.textFont_m = pygame.font.Font("images/font/pio.otf",36)
-        self.textFont_num_xs = pygame.font.Font("images/font/pau.tff",16)
+        self.textFont_num_xs = pygame.font.Font("images\\font\\pau.ttf",16)
+        self.textFont_num_s = pygame.font.Font("images\\font\\pau.ttf",24)
         self.images = []
         self.imgGen("ui")
         #self.imgGen("Cards (small)")
@@ -463,13 +464,15 @@ class CustomImg:
 
 class PokerFunc():
 
-    def __init__(self,image,sound,place=(0,0),player=None):
+    def __init__(self,image,sound,place=(0,0),player=None,comm=False,parent=None):
         self.name = "info"
         self.img = image
         self.sound = sound
         self.imagecards = []
         self.x = place[0]
         self.y = place[1]
+        self.parent = parent
+        self.comm = comm
         if player:
             self.genSet(player)
         else:
@@ -482,7 +485,10 @@ class PokerFunc():
             temp += 1
 
     def update(self):
-        for i in self.imagecards:
+        for j,i in enumerate(self.imagecards):
+            if self.comm:
+                if j == self.parent.rev:
+                    break
             i.update()
         
     
@@ -529,11 +535,14 @@ class Menu():
         #self.currentText.append
     def mainGame(self):
         self.currentText.append([self.img.textFont_m.render(self.parent.part,False,(255,255,255)),(740,20),False])
-        self.currentText.append([self.img.textFont_xs.render("Press F to progress",False,(255,255,255)),(750,590),False])
+        if not self.parent.processes:
+            self.currentText.append([self.img.textFont_xs.render("Press F to progress",False,(255,255,255)),(750,590),False])
+        else:
+            self.currentText.append([self.img.textFont_xs.render("Processing",False,(255,255,255)),(750,590),False])
         self.currentText.append([self.img.textFont_xs.render("Player Hand",False,(255,255,255)),(740,70),False])
         self.currentText.append([self.img.textFont_xs.render("Community",False,(255,255,255)),(740,130),False])
         self.currentObj.append(PokerFunc(self.img,self.sound,(740,90),player=self.parent.playerHand))
-        self.currentObj.append(PokerFunc(self.img,self.sound,(740,150),player=self.parent.communityHand))
+        self.currentObj.append(PokerFunc(self.img,self.sound,(740,150),player=self.parent.communityHand,comm=True,parent=self.parent))
         if self.parent.handsToUse or not self.parent.handsToUse == []:
             #print("added eval",self.parent.handsToUse)
             for j,i in enumerate(self.parent.handsToUse):
@@ -541,10 +550,11 @@ class Menu():
                 #print("Format:   ",rank_compare.fromFormatHand(i[0]))
                 self.currentObj.append(PokerFunc(self.img,self.sound,(740,(220 + 50*j)),player=rank_compare.fromFormatHand(i[0])))
                 self.currentText.append([self.img.textFont_xs.render(i[1].replace('-',' '),False,(255,255,255)),(755,250+50*j),False])
-                self.currentText.append([self.img.textFont_num_xs.render(str(mathymath.poker_probabilitie(i[1])),False,(255,255,255)),(900,230+50*j),False])
+                self.currentText.append([self.img.textFont_num_xs.render(str(mathymath.poker_probabilitie(i[1])),False,(255,255,255)),(860,230+50*j),False])
                 if j == 0:
                     break
         self.currentText.append([self.img.textFont_xs.render("Best Hands",False,(255,255,255)),(740,200),False])
+        self.currentText.append([self.img.textFont_num_s.render("Win Chance",False,(255,255,255)),(775,275),False])
         #self.currentObj.append(ImgButton(self.img.getImg("proceed"),760,530,onclickFunction=self.blank,name="select",onePress=True))
     def noScreen(self):
         pass
@@ -568,6 +578,19 @@ class Menu():
         if state.state == "preGame":
             self.currentScreen = self.preGame
         if state.state == "mainGame":
+            self.currentScreen = self.mainGame
+        if self.currentScreen:
+            self.currentScreen()
+        self.displayText()
+        self.updateObj()
+
+    def screen_update(self):
+        self.currentText = []
+        self.currentObj = []
+        self.currentScreen = self.noScreen
+        if self.parent.state == "preGame":
+            self.currentScreen = self.preGame
+        if self.parent.state == "mainGame":
             self.currentScreen = self.mainGame
         if self.currentScreen:
             self.currentScreen()
@@ -617,6 +640,7 @@ class Game():
         self.communityHand = None
         self.handsToUse = []
         self.rev = 0
+        self.processes = False
         #self.menu.preGame()
 
     def draw(self,playerhand,otherhands,deck,community):
@@ -641,6 +665,7 @@ class Game():
 
     def grabEvaluation(self):
         communityHand = []
+        
         for i in self.groups[3].cards:
             communityHand.append(rank_compare.toFormat((i.value,i.suit)))
         playerHand = []
@@ -659,7 +684,8 @@ class Game():
         self.handsToUse = []
         #for i in enemyHands:
         #    enemyOptions.append(list(i+communityHand))
-        
+        self.processes = True
+        self.menu.screen_update()
         options = rank_compare.gameComp(playerOptions)
         #print(options)
         strongest = rank_compare.strongestHand(options)
@@ -669,6 +695,7 @@ class Game():
             self.handsToUse.append([options[i],strongest[2][i][1]])
         #self.handsToUse.append([options[pick],strongest[2][pick][1]])
         print(self.handsToUse)
+        
         
 
 
@@ -694,6 +721,8 @@ class Game():
             self.sound.soundPlay("card-flip-3")
             self.rev = 3
             self.grabEvaluation()
+            self.processes = False
+
         if self.phase == 3:
             print("\n\n\n\n\n\n\n_____________Turn_____________") 
             self.part = "Turn"
@@ -701,6 +730,7 @@ class Game():
             self.sound.soundPlay("card-flip-3")
             self.rev = 4
             self.grabEvaluation()
+            self.processes = False
 
         if self.phase == 4:
             print("\n\n\n\n\n\n\n_____________River_____________") 
@@ -709,6 +739,7 @@ class Game():
             self.sound.soundPlay("card-flip-3")
             self.rev = 5
             self.grabEvaluation()
+            self.processes = False
 
         if self.phase == 5:
             print("\n\n\n\n\n\n\n_____________Reveal_____________") 
@@ -885,8 +916,9 @@ def mainGame(program):
                     #game.draw(mainhand,temphand,deck,commune)
                     print("all cards drawn")
                 if event.key == pygame.K_f:
+                    if not game.processes:
                     #game.state = ""
-                    game.menu.proceed()
+                        game.menu.proceed()
                     #musicEngine.soundPlay("submit")
                 if event.key == pygame.K_u:
                     commune.flipCards((0,5))
