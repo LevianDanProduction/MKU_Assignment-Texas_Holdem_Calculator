@@ -11,6 +11,9 @@ import numpy as np
 import rank_compare
 import itertools
 import mathymath
+import screenSim
+import settings as setmenu
+
 
 
 size = 240
@@ -293,6 +296,7 @@ class Deck(pygame.sprite.Sprite):
 
     def shuffle(self):
         #self.temp list(zip(self.deck))
+        #random.Random(4).shuffle(self.cards)
         random.shuffle(self.cards)
         print(self.cards)
 
@@ -546,6 +550,9 @@ class Menu():
         if self.parent.handsToUse or not self.parent.handsToUse == []:
             #print("added eval",self.parent.handsToUse)
             for j,i in enumerate(self.parent.handsToUse):
+                #print("mkobmibmi    ",i)
+                #print("lalalala   ",i[1])
+
                 #print("hand:    ", i)
                 #print("Format:   ",rank_compare.fromFormatHand(i[0]))
                 self.currentObj.append(PokerFunc(self.img,self.sound,(740,(220 + 50*j)),player=rank_compare.fromFormatHand(i[0])))
@@ -555,6 +562,8 @@ class Menu():
                     break
         self.currentText.append([self.img.textFont_xs.render("Best Hands",False,(255,255,255)),(740,200),False])
         self.currentText.append([self.img.textFont_num_s.render("Win Chance",False,(255,255,255)),(775,275),False])
+        self.currentText.append([self.img.textFont_xs.render("Odds Against Others",False,(255,255,255)),(740,310),False])
+        self.currentText.append([self.img.textFont_xs.render("Future Hands",False,(255,255,255)),(740,400),False])
         #self.currentObj.append(ImgButton(self.img.getImg("proceed"),760,530,onclickFunction=self.blank,name="select",onePress=True))
     def noScreen(self):
         pass
@@ -639,8 +648,10 @@ class Game():
         self.playerHand = None
         self.communityHand = None
         self.handsToUse = []
+        self.allStrength = []
         self.rev = 0
         self.processes = False
+        self.points = True
         #self.menu.preGame()
 
     def draw(self,playerhand,otherhands,deck,community):
@@ -673,12 +684,16 @@ class Game():
             playerHand.append(rank_compare.toFormat((i.value,i.suit)))
         enemyHands = []
         for j in self.groups[1]:
-            temp = ""
+            temp = []
             for i in j.cards:
-                temp = temp + rank_compare.toFormat((i.value,i.suit))
-            enemyHands.append(temp)
+                temp.append(rank_compare.toFormat((i.value,i.suit)))
+            enemyHands.append(temp+communityHand[:self.rev])
+        
         
         playerOptions = playerHand + communityHand[:self.rev]
+
+        print("mkivmkvkmvs   dfvsv ",playerOptions)
+        print(enemyHands)
         print(communityHand[:self.rev])
         enemyOptions = []
         self.handsToUse = []
@@ -686,15 +701,71 @@ class Game():
         #    enemyOptions.append(list(i+communityHand))
         self.processes = True
         self.menu.screen_update()
+
         options = rank_compare.gameComp(playerOptions)
         #print(options)
-        strongest = rank_compare.strongestHand(options)
-        #print(strongest)
-        pick = strongest[1][0]
-        for i in strongest[1]:
-            self.handsToUse.append([options[i],strongest[2][i][1]])
-        #self.handsToUse.append([options[pick],strongest[2][pick][1]])
+        if self.points:
+            strongest = rank_compare.strongestHand3(options,hand_to_row)
+            #("Sgrog ", strongest)
+            for i in strongest:
+                self.handsToUse.append([i[0].split(" "),i[1],i[2]])
+        else:
+            strongest = rank_compare.strongestHand(options)
+            #print(strongest)
+            for i in strongest[1]:
+                self.handsToUse.append([options[i],strongest[2][i][1]])
+            #self.handsToUse.append([options[pick],strongest[2][pick][1]])
+
+
         print(self.handsToUse)
+
+    def finalEvaluation(self):
+        communityHand = []
+        self.allStrength = []
+        for i in self.groups[3].cards:
+            communityHand.append(rank_compare.toFormat((i.value,i.suit)))
+        playerHand = []
+        for i in self.groups[0].cards:
+            playerHand.append(rank_compare.toFormat((i.value,i.suit)))
+        enemyHands = []
+        for j in self.groups[1]:
+            temp = []
+            for i in j.cards:
+                temp.append(rank_compare.toFormat((i.value,i.suit)))
+            enemyHands.append(temp+communityHand[:self.rev])
+
+        for j,i in enumerate(enemyHands):
+            options = rank_compare.gameComp(i)
+            if self.points:
+                strongest = rank_compare.strongestHand3(options,hand_to_row)
+                #("Sgrog ", strongest)
+                for i in strongest:
+                    self.allStrength.append([i[0].split(" "),i[1],i[2],j])
+        appender = self.handsToUse[0]
+        appender.append("player")
+        self.allStrength.append(appender)
+        max_value = max(sub_list[2] for sub_list in self.allStrength)
+        max_lists = [sub_list for sub_list in self.allStrength if sub_list[2] == max_value]
+        
+        if len(max_lists) == 1:
+            if not max_lists[0][3] == "player":
+                self.groups[1][max_lists[0][3]]
+                print("this dude has won fr")
+                print("you have ben beanten")
+                for i in self.allStrength:
+                    print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
+                    #print["NO:",i[3],"Bhand:",i[0],"type:",i[1]]
+            else:
+                print("Yay: u won fr ")
+                for i in self.allStrength:
+                    print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
+                
+        
+                
+
+
+
+        
         
         
 
@@ -749,6 +820,7 @@ class Game():
                 for j in reversed(i.cards):
                     j.handFlip(True,"show")
             self.sound.soundPlay("card-flip-3")
+            self.finalEvaluation()
 
         if self.phase == 6:
             print("\n\n\n\n\n\n\n_____________End_____________") 
@@ -759,15 +831,19 @@ class Game():
 
 
     def cleanup(self,playerhand,otherhands,deck,community):
-        for i in reversed(playerhand.cards):
-            playerhand.move(i,deck)
+        for i in reversed(community.cards):
+            community.move(i,deck)
         for i in otherhands:
             for j in reversed(i.cards):
                 i.move(j,deck)
-        for i in reversed(community.cards):
-            community.move(i,deck)
+        for i in reversed(playerhand.cards):
+            playerhand.move(i,deck)
+
         for i in deck.cards:
             i.handFlip(False,"hide")
+
+        #deck.cards = []
+        #deck.deckGen()
         deck.shuffle()
         print("\n\n\n\n\n\nCleaned") 
 
@@ -779,6 +855,15 @@ class Game():
         self.state = state.state
         if self.state == "mainMenu":
             screen.blit(self.title,(0,0))
+    
+    def playerBal(self,bal):
+        self.players = bal #5 goal 8
+        enemyamm = len(self.groups[1]) #7 current
+        while not self.players == enemyamm+1:
+            if self.players > enemyamm+1:
+                self.groups[1].append(EHand(imageEngine,musicEngine))
+            else:
+                self.groups[1].pop(-1)
 
         
 class Program():
@@ -807,12 +892,38 @@ class Program():
         if self.state == "mainGame":
             mainGame(self)
 
+def preprocess_df(df):
+    hand_to_row = {}
+    for index, row in df.iterrows():
+        hand_to_row[row['hand']] = row.to_dict()
         
+    return hand_to_row
 
-        
+def preprocess_df2(df):
+    hand_to_row = df.groupby('hand').apply(lambda x: x.iloc[0].to_dict()).to_dict()
+    return hand_to_row
 
-        
 
+import pickle   
+import pandas as pd
+import ast        
+#df2 = pd.read_csv('cards6.csv')
+
+rank_start_time = time.perf_counter()       
+#hand_to_row = preprocess_df2(df2)
+#with open('hand_to_row2.pickle', 'wb') as handle:
+#    pickle.dump(hand_to_row, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+with open('hand_to_row2.pickle', 'rb') as handle:
+    hand_to_row = pickle.load(handle)
+
+
+
+rank_end_time = time.perf_counter()
+rank_elapsed = rank_end_time - rank_start_time
+print(f"Time elapsed: {rank_elapsed} seconds")
+
+print("created pickle")
 
 imageEngine = ImgEngine()
 musicEngine = MusicEngine()
@@ -821,7 +932,7 @@ window = Screen()
 mainhand = Hand(imageEngine,musicEngine,"show")
 deck.deckGen()
 game = Game(imageEngine,musicEngine)
-musicEngine.musicPlay("main-h",-1)
+#musicEngine.musicPlay("main-h",-1)
 temphand = []
 commune = Community(imageEngine,musicEngine)
 
@@ -884,9 +995,10 @@ def preGame(program):
                 return
             pygame.display.update()
             clock.tick(fps)
-            
 
 def mainGame(program):
+    settings_menu = setmenu.SettingsMenu(screen,game) 
+
     for i in range(game.players-1):
         temphand.append(EHand(imageEngine,musicEngine,"hide"))
     game.phase = 0
@@ -897,6 +1009,10 @@ def mainGame(program):
                 pygame.quit()
                 exit()
             #game code
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if setmenu.cog_icon_rect.collidepoint(pygame.mouse.get_pos()):
+                    settings_menu.show()
             
             #print(pygame.mouse.get_pos())
             if event.type == pygame.KEYDOWN:
@@ -958,6 +1074,8 @@ def mainGame(program):
             
         for i in commune.cards:
             i.update()
+
+        screen.blit(setmenu.cog_icon, setmenu.cog_icon_rect.topleft)
 
         pygame.display.update()
         clock.tick(fps)

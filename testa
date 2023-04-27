@@ -1,0 +1,61 @@
+import itertools
+import numpy as np 
+import pandas as pd 
+import assesor
+import time
+import rank_compare
+import pickle
+import random
+
+with open('hand_to_row.pickle', 'rb') as handle:
+    hand_to_row = pickle.load(handle)
+
+
+deck = ['2♥', '2♦', '2♣', '2♠', '3♥', '3♦', '3♣', '3♠',
+        '4♥', '4♦', '4♣', '4♠', '5♥', '5♦', '5♣', '5♠',
+        '6♥', '6♦', '6♣', '6♠', '7♥', '7♦', '7♣', '7♠',
+        '8♥', '8♦', '8♣', '8♠', '9♥', '9♦', '9♣', '9♠',
+        '10♥', '10♦', '10♣', '10♠', 'j♥', 'j♦', 'j♣', 'j♠',
+        'q♥', 'q♦', 'q♣', 'q♠', 'k♥', 'k♦', 'k♣', 'k♠',
+        'a♥', 'a♦', 'a♣', 'a♠']
+hand = []
+for i in range(5):
+    hand.append(deck.pop(np.random.randint(0,len(deck)-1)))
+
+card_combinations = list(itertools.combinations(deck, 2))
+print(card_combinations[:20])
+print(len(card_combinations))
+card_combinations = [list(comb)+hand for comb in card_combinations]
+print("donzo")
+print(card_combinations[:20])
+
+allStrength = []
+for j,i in enumerate(card_combinations):
+    options = rank_compare.gameComp(i)
+    strongest = rank_compare.strongestHand3(options,hand_to_row)
+    #("Sgrog ", strongest)
+    for i in strongest:
+        allStrength.append([i[0].split(" "),i[1],i[2],j])
+
+for i in allStrength:
+    print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
+
+count = 0
+count2 = 0
+count3 = 0
+for i in allStrength:
+    if i[2] >= 50000000:
+        count += 1
+for i in allStrength:
+    if i[2] >= 70000000:
+        count2 += 1
+for i in allStrength:
+    if i[2] < 50000000:
+        count3 += 1
+
+print(f"there are {count}  rare cards")
+print(f"there are {count2}  amazing cards")
+print(f"there are {count3}  booty cards")
+print(f"so there is a {(count/1081)*100}% chance of having a strong")
+print(f"so there is a {(count2/1081)*100}% chance of having a godly hand")
+print(f"so there is a {(count3/1081)*100}% chance of having a low level/basic level hand")

@@ -53,6 +53,9 @@ def collectRank(x):
 def collectTie(x):
     result = assesor.rank(x)
     return result[1]
+def collectPoint(x):
+    result = assesor.pointCalc(x)
+    return result
 
 join_start_time = time.perf_counter()
 
@@ -72,9 +75,13 @@ cards["rank"] = cards["hand"].apply(collectRank)
 print("Ranks done")
 cards["tie"] = cards["hand"].apply(collectTie)
 print("Ties done in")
+cards["points"] = cards["hand"].apply(collectPoint)
+print("Ties done in")
 print(cards[:20])
+cool = cards.sort_values(by="points")
+print(cool[:20])
 
-cards.to_csv("cards4.csv")
+cool.to_csv("cards6.csv",index=False)
 
 
 rank_end_time = time.perf_counter()

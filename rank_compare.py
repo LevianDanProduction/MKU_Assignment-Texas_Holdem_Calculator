@@ -4,7 +4,7 @@ from collections import Counter
 import ast
 
 
-df = pd.read_csv('cards4.csv')
+df = pd.read_csv('cards6.csv')
 
 
 
@@ -31,7 +31,7 @@ def power_mapper(power):
     return power_map[str(power)]
 
 def handpower(hand):
-    handpower = {"straight-flush":1, "four-of-a-kind":2, "full-house":3,
+    handpower = {"royal-flush":0,"straight-flush":1, "four-of-a-kind":2, "full-house":3,
                   "flush":4, "straight":5, "three-of-a-kind":6,
                   "two-pair":7, "one-pair":8, "high-card":9}
     return handpower[hand[1]]
@@ -149,7 +149,71 @@ def strongestHand(hands):
     #print(finalHand)
     return (orderbreak,checkhand,unorder)
             
+
+def strongestHand2(hands):
+    handnow = hands
+    rankerhands = list()
+    finalHand = list()
+    for j,i in enumerate(handnow):
+        
+        current = compressHand(sort_hand(i))
+        #print(current)
+        selected_row = df.loc[df['hand'] == current]
+        #print("Search1: ",selected_row)
+        row_info = selected_row.iloc[0].to_dict()
         
 
-def compareHands():
-    pass
+        #print(row_info)
+        handy = row_info["hand"]
+        rank = row_info["rank"]
+        tie = row_info["points"]
+        info = ast.literal_eval(row_info["tie"])
+        group = [handy,rank,info,j,tie]
+        rankerhands.append(group)
+        finalHand.append([handnow,j])
+        #print(rankerhands,finalHand)
+
+    #leader = rankerhands[0]
+
+    #for i in rankerhands:
+    #    if i[4] > leader[4]:
+    #        leader = i
+    max_value = max(sub_list[4] for sub_list in rankerhands)
+    max_lists = [sub_list for sub_list in rankerhands if sub_list[4] == max_value]
+    print(i)
+    return ([[i[0],i[1],i[4]] for i in max_lists])      
+
+def strongestHand3(hands, hand_to_row):
+    rankerhands = []
+
+    for j, i in enumerate(hands):
+        current = compressHand(sort_hand(i))
+        selected_row = hand_to_row[current]
+        row_info = selected_row
+
+        handy = row_info["hand"]
+        rank = row_info["rank"]
+        tie = row_info["points"]
+        info = ast.literal_eval(row_info["tie"])
+        group = [handy, rank, info, j, tie]
+        rankerhands.append(group)
+
+    max_value = float('-inf')
+    max_lists = []
+
+    for i in rankerhands:
+        if i[4] > max_value:
+            max_value = i[4]
+            max_lists = [i]
+        elif i[4] == max_value:
+            max_lists.append(i)
+
+    result = [[i[0], i[1], i[4]] for i in max_lists]
+    return result
+
+
+def compareHands(h1,h2):
+    if h1[2]>h2[2]:
+        return h1
+    else:
+        return h2

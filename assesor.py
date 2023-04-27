@@ -1,4 +1,5 @@
 from collections import namedtuple
+import rank_compare
 
 class Card(namedtuple('Card', 'face, suit')):
     def __repr__(self):
@@ -131,6 +132,28 @@ def handy(cards='2♥ 2♦ 2♣ k♣ q♦'):
     assert len(hand) == 5, "Invalid: Must be 5 cards in a hand, not %i" % len(hand)
     assert len(set(hand)) == 5, "Invalid: All cards in the hand must be unique %r" % cards
     return hand
+
+def handpower(hand):
+    handpower = {"royal-flush":11,"straight-flush":10, "four-of-a-kind":9, "full-house":8,
+                  "flush":7, "straight":6, "three-of-a-kind":5,
+                  "two-pair":4, "one-pair":3, "high-card":2}
+    return handpower[hand]
+
+def pointCalc(hand):
+    handy = rank(hand)
+    ranker = handy[0] 
+    tie = handy[1]
+
+    base_value = handpower(ranker)*10000000
+    tiepower = 0
+    for j,i in enumerate(tie):
+        tiepower += (10**j)*rank_compare.power_map[i]
+    finalpower = base_value + tiepower
+    return finalpower
+
+
+
+
 
 
 if __name__ == '__main__':
