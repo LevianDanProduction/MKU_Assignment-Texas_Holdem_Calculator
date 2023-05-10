@@ -5,10 +5,13 @@ import random
 import time
 import math 
 from functools import partial
-import numpy as np
 import rank_compare
 import itertools
 import mathymath
+import itertools
+import numpy as np 
+import pandas as pd 
+
 
 class Card():
     suits = ["hearts", "diamonds", "clubs", "spades"]
@@ -42,63 +45,53 @@ class Deck():
         self.cards = []
 
     def shuffle(self):
-        #self.temp list(zip(self.deck))
+        # Shuffle the cards in the deck
         random.shuffle(self.cards)
-        #print(self.cards)
 
     def deckGen(self):
+        # Generate the deck with Card objects and shuffle
         for i in Deck.deck:
             self.cards.append(Card(i,self))
         self.shuffle()
 
-    
     def getCardPlace(self,card):
+        # Get the index of the specified card in the deck
         return self.cards.index(card)
     
-    def getCardPlace2(self,card):
+    def getCardPlace2(self,card): 
         index = [i for i, cardv in enumerate(self.cards) if cardv.cardval == card]
         return index[0]
 
-
     def drawCard(self,location):
+        # Draw the top card from the deck and move it to the specified location
         self.move(self.cards[-1],location)
 
     def move(self,card,location):
+        # Move the specified card to the specified location
         if self.cards.count(card) > 0:
             card.parentchange(location)
-            #print(location.name)
-            #Physically changing the cards location
             if location == self:
                 self.cards.append(card)
             else:
                 location.cards.append(card)
-                #print("moved")
             self.cards.remove(card)
-            #print(location.cards[0].suit)
-            
-# p =    [a,b] = *p,  
+
 class Hand():
     Hands = 0
     def __init__(self):
         self.name = "hand"
         self.cards = []
         Hand.Hands += 1
-
     
     def move(self,card,location):
         if self.cards.count(card) > 0:
             card.parentchange(location)
-            #print(location.name)
-            #Physically changing the cards location
             if location == self:
                 self.cards.append(card)
             else:
                 location.cards.append(card)
-                #print("moved")
             self.cards.remove(card)
-            #print(location.cards[0].suit)
         else:
-            #print(f"The selected card to move is not in {self.name}")
             pass
     
     def getCardPlace(self,card):
@@ -127,17 +120,12 @@ class Community():
     def move(self,card,location):
         if self.cards.count(card) > 0:
             card.parentchange(location)
-            #print(location.name)
-            #Physically changing the cards location
             if location == self:
                 self.cards.append(card)
             else:
                 location.cards.append(card)
-                #print("moved")
             self.cards.remove(card)
-            #print(location.cards[0].suit)
         else:
-            #print(f"The selected card to move is not in {self.name}")
             pass
 
     
@@ -148,7 +136,6 @@ class Game():
 
     def __init__(self):
         self.name = "game"
-
         self.state = ""
         self.players = 1
         self.part = "Poker"
@@ -233,14 +220,18 @@ class Game():
 
     def infoRound(self,allplayers,winner=None):
         if winner:
-            return 
+            win = winner
+        else:
+            win = None 
         points = [0]*10
         evaluated = []
         for i in allplayers:
             points[self.indexer[i[1]]] += 1
         for j,i in enumerate(points):
-            evaluated.append([self.indexed[j],i])
-        return evaluated, evaluated.sort(key=lambda x: x[1])
+            evaluated.append([self.indexed[j],i]) #
+        eval2 = sorted(evaluated,key=lambda x: x[1])
+        #print(evaluated, eval2,win)
+        return (evaluated, eval2,win)
 
     def finalEvaluation(self):
         communityHand = []
@@ -279,22 +270,23 @@ class Game():
                     #]print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
                     #print["NO:",i[3],"Bhand:",i[0],"type:",i[1]]
                     pass
-                self.evalstats = ["loss"]
+                self.evalstats = ["loss",self.infoRound(self.allStrength),max_lists[0][1]]
             else:
                 #print("Yay: u won fr ")
                 for i in self.allStrength:
                     #print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
                     pass
-                self.evalstats = ["win"]
+                self.evalstats = ["win",self.infoRound(self.allStrength),max_lists[0][1]]
         else:
             for i in max_lists:
                 if i[3] == "player":
-                    self.evalstats = ["draw"]
+                    self.evalstats = ["draw",self.infoRound(self.allStrength),max_lists[0][1]]
                     for i in self.allStrength:
-                        print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
+                        #print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
+                        pass
                     return 
                 else:
-                    self.evalstats = ["loss"]
+                    self.evalstats = ["loss",self.infoRound(self.allStrength),max_lists[0][1]]
         return 
                 
 
@@ -353,6 +345,7 @@ class Game():
         deck.shuffle()
         #print("\n\n\n\n\n\nCleaned") 
 
+    #plays a round of poker instantly
     def round(self):
         self.draw(*self.groups)
         self.rev = 5
@@ -420,7 +413,7 @@ class Game():
                 return False
             case 6:
                 return False
-        print(f"mainhand:{[i.cardval for i in mainhand.cards]} community:{[i.cardval for i in commune.cards]}")
+        #print(f"mainhand:{[i.cardval for i in mainhand.cards]} community:{[i.cardval for i in commune.cards]}")
 
 
 
@@ -433,11 +426,8 @@ deck.deckGen()
 game = Game()
 temphand = []
 commune = Community()
-simtimes = 0
-global losses
-global wins
-wins = 0
-losses = 0
+
+
 
 class Counter:
     wins = 0
@@ -447,6 +437,44 @@ class Counter:
     community = None
     phase = None
     draws = 0
+    winst = []
+    lossest = []
+    drawst = []
+    freqc = []
+    freqa = []
+    best = []
+    outcome = []
+    hand = []
+    players = 0
+
+    @staticmethod
+    def generateFile():
+        table = {"hand":Counter.hand,"outcome":Counter.outcome,"popular freq":Counter.freqc,"freq volume":Counter.freqa,"best":Counter.best,"opponents":Counter.players}
+        tableex = pd.DataFrame(table)
+        str(Counter.wins*Counter.losses*Counter.draws)
+        tableex.to_csv(str((Counter.wins*Counter.losses*Counter.draws)/100)+str(np.random.randint(1,100))+"sim with"+str(Counter.players)+"players.csv")
+
+    @staticmethod
+    def resetCounter():
+        Counter.wins = 0
+        Counter.losses = 0
+        Counter.type = "slow"
+        Counter.player = None
+        Counter.community = None
+        Counter.phase = None
+        Counter.draws = 0
+        Counter.winst = []
+        Counter.lossest = []
+        Counter.drawst = []
+        Counter.freqc = []
+        Counter.freqa = []
+        Counter.best = []
+        Counter.outcome = []
+        Counter.players = 0    
+        Counter.hand = []
+        Counter.current = ['8♠', 'k♠']
+        
+        
 
 def loop():
     #print(mainhand.cards)
@@ -490,14 +518,29 @@ def loadOpt(opt):
         temphand.append(EHand())
     return opt["simulations"],opt
 
-def counter(stats):
-    print("stats",stats)
+def counter(stats,collect=True,hand=None):
+    #print("stats",stats)
     if stats[0] == "win":
         Counter.wins += 1
     elif stats[0] == "loss":
         Counter.losses += 1
     else:
         Counter.draws += 1
+    
+    if collect:
+        if stats[0] == "win":
+            Counter.outcome.append("win")
+        elif stats[0] == "loss":
+            Counter.outcome.append("loss")
+        else:
+            Counter.outcome.append("draw")
+        
+        Counter.freqc.append(stats[1][1][-1][0]) # Most Frequent name
+        Counter.freqa.append(stats[1][1][-1][1]) #most freq volume
+        Counter.best.append(stats[2]) # Best Hand
+        Counter.hand.append(" ".join(Counter.current)) 
+
+
     
 
 def simulateGame(index):
@@ -508,26 +551,28 @@ def simulateGame2(index):
     turn = loop2()
     counter(turn)
     #print(index)
-def simulateGame3(index):
+def simulateGame3(index,hand=None):
     turn = loop3()
-    counter(turn)
+    counter(turn,hand)
     #print(index)
 
 def sim(sim=1,players=2,speed="instant",inject=False,phase=1,hand=['8♠', 'k♠'],comm=['a♠', '8♣', 'a♣', 'a♥','2♥']):
     game.phase = 0
+    temphand = []
     for i in range(players):
         temphand.append(EHand())
     game.groups = (mainhand,temphand,deck,commune)
     Counter.wins = 0
     Counter.losses = 0
     Counter.draws = 0
+    Counter.players = players
     rank_start_time = time.perf_counter() 
     if inject:
         Counter.player = hand
         Counter.community = comm
         Counter.phase = phase
         for i in range(sim):
-            simulateGame3(i)
+            simulateGame3(i,hand)
     if speed == "instant":
         for i in range(sim):
             simulateGame2(i)
@@ -537,8 +582,9 @@ def sim(sim=1,players=2,speed="instant",inject=False,phase=1,hand=['8♠', 'k♠
 
     rank_end_time = time.perf_counter()
     rank_elapsed = rank_end_time - rank_start_time
-    print(f"Time elapsed: {rank_elapsed} seconds")
-    print(f"Wins: {Counter.wins} Losses: {Counter.losses} ")
+    #print(f"Time elapsed: {rank_elapsed} seconds")
+    #print(f"Wins: {Counter.wins} Losses: {Counter.losses} ")
+    return
 
 
 if __name__ == '__main__':
@@ -549,7 +595,7 @@ if __name__ == '__main__':
         hand_to_row = pickle.load(handle)
 
     print("created pickle")
-
+"""
     simtimes,settings = loadOpt(options())
     game.phase = 0
     game.groups = (mainhand,temphand,deck,commune)
@@ -571,7 +617,56 @@ if __name__ == '__main__':
     rank_elapsed = rank_end_time - rank_start_time
     print(f"Time elapsed: {rank_elapsed} seconds")
     print(f"Wins: {Counter.wins} Losses: {Counter.losses} Draws: {Counter.draws} ")
+    #Counter.generateFile()
+"""
+    
 
     #what is your hand: ['a♣', 'k♣']
     #what is your community:['10♠', 'j♠', 'q♠', 'k♠', 'a♠']
-    
+
+    #["j♣","j♥"]
+     #["j♣","j♥"]
+    #monte Carlo
+
+if __name__ == '__main__':
+    def simulateSample():
+        fullDeck = ['2♥', '2♦', '2♣', '2♠', '3♥', '3♦', '3♣', '3♠',
+            '4♥', '4♦', '4♣', '4♠', '5♥', '5♦', '5♣', '5♠',
+            '6♥', '6♦', '6♣', '6♠', '7♥', '7♦', '7♣', '7♠',
+            '8♥', '8♦', '8♣', '8♠', '9♥', '9♦', '9♣', '9♠',
+            '10♥', '10♦', '10♣', '10♠', 'j♥', 'j♦', 'j♣', 'j♠',
+            'q♥', 'q♦', 'q♣', 'q♠', 'k♥', 'k♦', 'k♣', 'k♠',
+            'a♥', 'a♦', 'a♣', 'a♠']#
+        simAmmount = [1000] # total amount of files being generated
+        enemyAmount = [4]
+        card_combinations = list(itertools.combinations(fullDeck,2))
+        countYakno = len(card_combinations)
+        percental = -1
+        numro = 0
+        rank_start_time = time.perf_counter() 
+        for countsim in simAmmount:
+            Counter.resetCounter()
+            for h,i in enumerate(card_combinations): #1326
+                for j in enemyAmount:
+                    numro += 1
+                    Counter.current = list(i)
+                    sim(sim=countsim,players=j,speed="instant",inject=True,phase=1,hand=list(i),comm=['a♠', '8♣', 'a♣', 'a♥','2♥'])
+                if h % (countYakno//100) == 0:
+                    print(h,(countYakno//100))
+                    curren = time.perf_counter()
+                    rank_elapsed = curren - rank_start_time
+                    percental += 1
+                    secs,mins = math.modf(rank_elapsed/60)
+                    print(f"Creation {percental}% complete - Current Time Elapsed {int(mins)}:{round(secs*60,2)} ")
+                #print(numro) 
+            print(f"Creation 100% complete")
+            print("Generating files...")
+            Counter.generateFile()
+
+    rank_start_time = time.perf_counter()          
+    simulateSample()
+
+    rank_end_time = time.perf_counter()
+    rank_elapsed = rank_end_time - rank_start_time
+    print(f"Time elapsed: {rank_elapsed} seconds")
+    print(f"Wins: {Counter.wins} Losses: {Counter.losses} ")

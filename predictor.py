@@ -36,7 +36,6 @@ def futurehand(handr,commr,rev=0,convert=True):
         print("gutter")
         left = 0
 
-
     if convert:
         hand = [card.cardvar for card in handr.cards]
         comm = [card.cardvar for j,card in enumerate(commr.cards) if j < 5-left]
@@ -49,32 +48,18 @@ def futurehand(handr,commr,rev=0,convert=True):
         comm = comm[:5-left]
         opti = hand+comm
         decka = [i for i in fullDeck if not i in comm and not i in hand]
-        
-
-    print("opt\n\n\n\n\n",opti)
-    print("\n\n\n\n\n",hand)
-    print("comm\n\n\n\n\n",comm)
-    #print("Deck fr")
-    #print(decka)
-    #print(len(decka))
 
     card_combinations = list(itertools.combinations(decka,left))
-    #print("\n\n\n\n\n tooo \n\n\n\n",card_combinations)
 
     card_combinations = [list(comb)+opti for comb in card_combinations]
-    #print(card_combinations)
-
 
     combine = mt.combinations(len(decka),left)
-    #print("combine",combine)
 
 
     allStrength = []
     for j,i in enumerate(card_combinations):
         options = rank_compare.gameComp(i)
-        #print("opti tiop  :",options)
         strongest = rank_compare.strongestHand3(options,hand_to_row)
-        #("Sgrog ", strongest)
         i = strongest[0]
         allStrength.append([i[0].split(" "),i[1],i[2],j])
     
@@ -129,7 +114,7 @@ def future_eval(hands,type=2,readeval=1081,lowestbest=(20000000,"high-card")):
                 print(f"     ♜ Total Chance for Solid Hand is {100*total2/readeval}% ")
                 total2 = 0
                 print("\n♟ Regular Hands ♟")
-                
+
             print(f"- {indexed[j]}  was {i} out of {readeval} | This is a {100*(i/readeval)}% chance")
             total += i
             total2 += i
@@ -148,11 +133,59 @@ def future_eval(hands,type=2,readeval=1081,lowestbest=(20000000,"high-card")):
         print(f"  ▨   Total Chance for A Low Probability Hand (<=2%) is {100*(total-total2)/readeval}% ")
         print(f"  ▨   Total Chance for A Above Community Hand is {100*(count)/readeval}% ")
         total2 = 0
+
+    if type == 3:
+        indexer = {"royal-flush":0,"straight-flush":1, "four-of-a-kind":2, "full-house":3,
+                  "flush":4, "straight":5, "three-of-a-kind":6,
+                  "two-pair":7, "one-pair":8, "high-card":9}
+        indexed = {v: k for k, v in indexer.items()}
+        points = [0]*10
+        for i in hands:
+            points[indexer[i[1]]] += 1
+        total = 0
+        total2 = 0
+        total3 = 0
+        print(points)
+        output = []
+        
+        for j,i in enumerate(points):
+            
+            if j == 0:
+                output.append("\n♛ Best Hands ♛")
+            elif j == 6:
+                output.append(f"     ♛ Total Chance for Best Hand is {100*total2/readeval}% ")
+                total2 = 0
+                output.append("\n♜ Solid Hands ♜")
+            elif j == 8:
+                output.append(f"     ♜ Total Chance for Solid Hand is {100*total2/readeval}% ")
+                total2 = 0
+                output.append("\n♟ Regular Hands ♟")
+
+            output.append(f"- {indexed[j]}  was {i} out of {readeval} | This is a {100*(i/readeval)}% chance")
+            total += i
+            total2 += i
+            if j == 9:
+                output.append(f"     ♟ Total Chance for Regular Hand is {100*total2/readeval}% ")
+                
+
+                       
+
+        output.append(f"total is {total} ")
+        count = 0
+        for i in hands:
+            if i[2] >= round(lowestbest[0],-7)+10000000:
+                count += 1
+        output.append(f"  ▨   Minimum standard rank is {lowestbest[1]} ")
+        output.append(f"  ▨   Total Chance for A Low Probability Hand (<=2%) is {100*(total-total2)/readeval}% ")
+        output.append(f"  ▨   Total Chance for A Above Community Hand is {100*(count)/readeval}% ")
+        total2 = 0
+        return(output)
         
 
 
 def handToOthers():
     pass
+
 
 
 
@@ -227,8 +260,8 @@ if __name__ == '__main__':
     for i in range(2):
         hand2.append(deck1.pop(np.random.randint(0,len(deck1)-1)))
 
-
-    #hand2,hand1 = ['a♣', 'k♣'],['10♠', 'j♠', 'q♠', 'k♠', 'a♠']
+#7♠', 'j♠', '4♣', 'q♣', 'a♦
+    hand2,hand1 = ['5♥', 'a♥'],['k♣', '4♠', 'j♠', 'j♣', 'a♠']
 
     low = lowestBest(hand1,5)
     handscan = futurehand(hand2,hand1,rev=3,convert=False)

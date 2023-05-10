@@ -8,11 +8,14 @@ import math
 from functools import partial
 from pygame.math import Vector2
 import numpy as np
-import rank_compare
 import itertools
+
 import mathymath
 import screenSim
+import rank_compare
 import settings as setmenu
+import predictor
+
 
 
 
@@ -26,6 +29,7 @@ pygame.mixer.init
 
 screen = pygame.display.set_mode((width,height),RESIZABLE)
 clock = pygame.time.Clock()
+
 
 class Screen():
     def __init__(self):
@@ -187,8 +191,8 @@ class Card(pygame.sprite.Sprite):
 
     def position(self,state,order=0):
         if state == "deck":
-            self.x = self.parent.x - order*0.8
-            self.y = self.parent.y - order*0.8
+            self.x = self.parent.x - order*0.4
+            self.y = self.parent.y - order*0.4
 
         elif state == "hand":
             #print(self.parent.x,self.parent.y)
@@ -375,7 +379,9 @@ class Hand(pygame.sprite.Sprite):
         self.x = Hand.centre[0]+ Hand.radius * math.sin(Hand.rad*(self.position/Hand.Hands))
         self.y = Hand.centre[1]+ Hand.radius * math.cos(Hand.rad*(self.position/Hand.Hands))
         #print(self.x,self.y)
-        
+    
+    def imagechange(self,img):
+        self.potimg = self.sprites.getImg(img)
     
     def getCardPlace(self,card):
         return self.cards.index(card)
@@ -562,9 +568,10 @@ class Menu():
                     break
         self.currentText.append([self.img.textFont_xs.render("Best Hands",False,(255,255,255)),(740,200),False])
         self.currentText.append([self.img.textFont_num_s.render("Win Chance",False,(255,255,255)),(775,275),False])
-        self.currentText.append([self.img.textFont_xs.render("Odds Against Others",False,(255,255,255)),(740,310),False])
-        self.currentText.append([self.img.textFont_xs.render("Future Hands",False,(255,255,255)),(740,400),False])
+        self.currentText.append([self.img.textFont_xs.render("Future Hands",False,(255,255,255)),(740,310),False])
+        #self.currentText.append([self.img.textFont_xs.render("Future Hands",False,(255,255,255)),(740,400),False])
         #self.currentObj.append(ImgButton(self.img.getImg("proceed"),760,530,onclickFunction=self.blank,name="select",onePress=True))
+        self.currentObj.append(BButton(790, 350, 80, 30, "gray", "lightblue", self.img.textFont_xs, "Start", "Start the predictor", ToolTip(self.img.textFont_xs)))
     def noScreen(self):
         pass
 
@@ -574,8 +581,11 @@ class Menu():
         
     def updateObj(self):
         for i in self.currentObj:
-            if i.name == "select":
-                i.update()
+            if i.name == "customdrawb":
+                i.update(self.parent.eventlist)
+                i.draw()
+                i.tool_tip.update()
+                i.tool_tip.draw()
             else:
                 i.update()
         
@@ -632,6 +642,111 @@ class ImgButton():
                 self.alreadyPressed = False
         screen.blit(self.img,(self.x,self.y))
 
+class ToolTip():
+    def __init__(self, font):
+        self.name = "customdrawb"
+        self.font = font 
+        self.tip_text = None
+        self.current_text = None
+        self.rect = None
+        self.image = None
+
+    def set_text(self, tip_text):
+        self.tip_text = tip_text
+
+    def update(self):
+        mouse_pos = pygame.mouse.get_pos()
+        if self.tip_text != self.current_text:
+            self.current_text = self.tip_text
+            if self.current_text == None:
+                self.image = None
+                self.rect = None
+            else:
+                self.image = self.font.render(self.tip_text, True, (0, 0, 0))
+                self.rect = self.image.get_rect().inflate(6, 2)
+        if self.rect:
+            self.rect.topright = mouse_pos[0]-16, mouse_pos[1]
+
+    def draw(self):
+        if self.rect and self.image:
+            pygame.draw.rect(screen, (255, 255, 0), self.rect)
+            screen.blit(self.image, self.image.get_rect(center = self.rect.center))
+
+class BBox():
+    def __init__(self, x, y, w, h, font, color=pygame.Color('white'), text=None):
+        self.game = game
+        self.name = "customdrawb"
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = color
+        self.image = font
+        self.hover = False
+        self.texton = text
+    def update():
+        pass
+    def draw(self):
+        color = self.color if self.hover  else self.highlight_color
+        pygame.draw.rect(screen, color, self.rect)
+        screen.blit(self.image, self.image.get_rect(center = self.rect.center))
+        if self.texton:
+            blit_text(self.rect, self.texton, (self.rect.x,self.rect.y), self.font, color=pygame.Color('black'))
+
+
+        
+class BButton():
+    def __init__(self, x, y, w, h, color, highlight_color, font, text, tip_text=None, tool_tip=None):
+        self.game = game
+        self.name = "customdrawb"
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = color
+        self.highlight_color = highlight_color
+        self.image = font.render(text, True, (0, 0, 0))
+        self.hover = False
+        self.tip_text = tip_text
+        self.tool_tip = tool_tip
+        self.btext = ""
+        self.bdisplay = BBox(50,50,700,600,font,text=self.btext)
+        self.displayposs = False
+        
+    def update(self,event_list):
+        mouse_pos = pygame.mouse.get_pos()
+        self.hover = self.rect.collidepoint(mouse_pos)
+        if self.hover and self.tool_tip:
+            self.tool_tip.set_text(self.tip_text)
+            self.displayposs = True
+        
+        #if event_list
+
+        for event in event_list:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.rect.collidepoint(event.pos):
+                    if self.game.rev == 5:
+                        continue
+
+                        predictor.lowestBest(communityHand)
+
+                    playerHand = []
+                    communityHand = []
+                    for i in self.game.groups[3].cards:
+                        communityHand.append(rank_compare.toFormat((i.value,i.suit)))
+                    for i in self.game.groups[0].cards:
+                        playerHand.append(rank_compare.toFormat((i.value,i.suit)))
+                    if self.game.rev == 3 or self.game.rev == 4:    
+                        handscan = predictor.futurehand(playerHand,communityHand,rev=self.game.rev,convert=False)
+                        self.btext = "\n".join(predictor.future_eval(handscan[0],type=3,readeval=handscan[1]))
+                        predictor.future_eval(handscan[0],type=2,readeval=handscan[1])
+
+
+                    
+                    
+    def draw(self):
+        color = self.color if self.hover  else self.highlight_color
+        pygame.draw.rect(screen, color, self.rect)
+        screen.blit(self.image, self.image.get_rect(center = self.rect.center))
+        if self.displayposs:
+            self.bdisplay.draw
+
+        
+
 class Game():
 
     def __init__(self,image,sound):
@@ -652,6 +767,7 @@ class Game():
         self.rev = 0
         self.processes = False
         self.points = True
+        self.eventlist = None
         #self.menu.preGame()
 
     def draw(self,playerhand,otherhands,deck,community):
@@ -750,29 +866,42 @@ class Game():
         if len(max_lists) == 1:
             if not max_lists[0][3] == "player":
                 self.groups[1][max_lists[0][3]]
-                print("this dude has won fr")
+                #print("this dude has won fr")
                 print("you have ben beanten")
                 for i in self.allStrength:
                     print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
                     #print["NO:",i[3],"Bhand:",i[0],"type:",i[1]]
+                    return self.groups[1][max_lists[0][3]]
             else:
                 print("Yay: u won fr ")
                 for i in self.allStrength:
                     print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
-                
+                    return self.groups[0]
+        else:
+            for i in max_lists:
+                if i[3] == "player":
+                    print("Joe Drew a Dewy Stew u Drew ")
+                    for i in self.allStrength:
+                        print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
+                    return 
+                else:
+                    print("you have ben beanten")
+                    print(f"NO:{i[3]},   Bhand:{i[0]},  type:{i[1]}, score:{i[2]}")
+        return 
         
                 
+    def revealWin(self,winner=None):
+        if winner:
+            for i in self.groups[1]:
+                i.imagechange("losepot") 
+            self.groups[0].imagechange("losepot") 
+            winner.imagechange("winpot")
 
 
-
-        
-        
-        
-
-
-
-        
-
+    def resetWin(self):
+        for i in self.groups[1]:
+            i.imagechange("pot") 
+        self.groups[0].imagechange("pot") 
 
     def phaseGame(self):
         if self.phase == 1:
@@ -820,7 +949,7 @@ class Game():
                 for j in reversed(i.cards):
                     j.handFlip(True,"show")
             self.sound.soundPlay("card-flip-3")
-            self.finalEvaluation()
+            self.revealWin(self.finalEvaluation())
 
         if self.phase == 6:
             print("\n\n\n\n\n\n\n_____________End_____________") 
@@ -828,6 +957,7 @@ class Game():
             self.phase = 0
             self.cleanup(*self.groups)
             self.sound.soundPlay("round")
+            self.resetWin()
 
 
     def cleanup(self,playerhand,otherhands,deck,community):
@@ -851,7 +981,8 @@ class Game():
     def stateChange(self,state):
         self.stateC = state
     
-    def update(self,state):
+    def update(self,state,event):
+        self.eventlist = event
         self.state = state.state
         if self.state == "mainMenu":
             screen.blit(self.title,(0,0))
@@ -904,12 +1035,36 @@ def preprocess_df2(df):
     return hand_to_row
 
 
+def blit_text(surface, text, pos, font, color=pygame.Color('black')):
+    words = [word.split(' ') for word in text.splitlines()]  # 2D array where each row is a list of words.
+    space = font.size(' ')[0]  # The width of a space.
+    max_width, max_height = surface.get_size()
+    x, y = pos
+    for line in words:
+        for word in line:
+            word_surface = font.render(word, 0, color)
+            word_width, word_height = word_surface.get_size()
+            if x + word_width >= max_width:
+                x = pos[0]  # Reset the x.
+                y += word_height  # Start on new row.
+            surface.blit(word_surface, (x, y))
+            x += word_width + space
+        x = pos[0]  # Reset the x.
+        y += word_height  # Start on new row.
+
 import pickle   
 import pandas as pd
 import ast        
 #df2 = pd.read_csv('cards6.csv')
 
 rank_start_time = time.perf_counter()       
+
+
+
+
+
+#uncomment 1068,1069,1070 if you dont have the pickle
+
 #hand_to_row = preprocess_df2(df2)
 #with open('hand_to_row2.pickle', 'wb') as handle:
 #    pickle.dump(hand_to_row, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -917,7 +1072,7 @@ rank_start_time = time.perf_counter()
 with open('hand_to_row2.pickle', 'rb') as handle:
     hand_to_row = pickle.load(handle)
 
-
+predictor.hand_to_row = hand_to_row
 
 rank_end_time = time.perf_counter()
 rank_elapsed = rank_end_time - rank_start_time
@@ -925,21 +1080,22 @@ print(f"Time elapsed: {rank_elapsed} seconds")
 
 print("created pickle")
 
-imageEngine = ImgEngine()
+imageEngine = ImgEngine() 
 musicEngine = MusicEngine()
 deck = Deck(imageEngine,musicEngine)
 window = Screen()
 mainhand = Hand(imageEngine,musicEngine,"show")
 deck.deckGen()
 game = Game(imageEngine,musicEngine)
-#musicEngine.musicPlay("main-h",-1)
+musicEngine.musicPlay("main-h",-1)
 temphand = []
 commune = Community(imageEngine,musicEngine)
 
 
 def mainMenu(program):
     while program.run == True:
-        for event in pygame.event.get():
+        event_list = pygame.event.get()
+        for event in event_list:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
@@ -957,7 +1113,7 @@ def mainMenu(program):
                     program.setState("preGame")
                     print(program.test)
 
-            game.update(program)
+            game.update(program,event_list)
             update = game.menu.update(program)
             if program.stateCheck():
                 return
@@ -968,7 +1124,8 @@ def mainMenu(program):
 
 def preGame(program):
     while program.run == True:
-        for event in pygame.event.get():
+        event_list = pygame.event.get()
+        for event in event_list:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
@@ -989,7 +1146,7 @@ def preGame(program):
                     game.players += 1
                     print(game.players)
 
-            game.update(program)
+            game.update(program,event_list)
             game.menu.update(program)
             if program.stateCheck():
                 return
@@ -1004,7 +1161,8 @@ def mainGame(program):
     game.phase = 0
     game.groups = (mainhand,temphand,deck,commune)
     while True:
-        for event in pygame.event.get():
+        event_list = pygame.event.get()
+        for event in event_list:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
@@ -1039,9 +1197,6 @@ def mainGame(program):
                 if event.key == pygame.K_u:
                     commune.flipCards((0,5))
                     musicEngine.soundPlay("submit")
-                if event.key == pygame.K_r:
-                    game.grabEvaluation()
-                    musicEngine.soundPlay("submit")
 
                     # Check if mouse button is down
                 if pygame.mouse.get_pressed()[0]:
@@ -1050,7 +1205,7 @@ def mainGame(program):
                         pygame.time.delay(10)
 
         screen.blit(window.bg,(0,0))
-        game.update(program)
+        game.update(program,event_list)
         update = game.menu.update(program)
         if program.stateCheck():
             return
