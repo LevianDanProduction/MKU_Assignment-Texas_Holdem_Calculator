@@ -586,7 +586,7 @@ def sim(sim=1,players=2,speed="instant",inject=False,phase=1,hand=['8♠', 'k♠
     #print(f"Wins: {Counter.wins} Losses: {Counter.losses} ")
     return
 
-
+whatsim = None
 if __name__ == '__main__':
     import pickle   
     import pandas as pd
@@ -595,7 +595,10 @@ if __name__ == '__main__':
         hand_to_row = pickle.load(handle)
 
     print("created pickle")
-"""
+
+    whatsim = input("normal or auto")
+
+if whatsim == "normal":
     simtimes,settings = loadOpt(options())
     game.phase = 0
     game.groups = (mainhand,temphand,deck,commune)
@@ -618,9 +621,7 @@ if __name__ == '__main__':
     print(f"Time elapsed: {rank_elapsed} seconds")
     print(f"Wins: {Counter.wins} Losses: {Counter.losses} Draws: {Counter.draws} ")
     #Counter.generateFile()
-"""
-    
-
+elif whatsim == "auto":
     #what is your hand: ['a♣', 'k♣']
     #what is your community:['10♠', 'j♠', 'q♠', 'k♠', 'a♠']
 
@@ -628,45 +629,45 @@ if __name__ == '__main__':
      #["j♣","j♥"]
     #monte Carlo
 
-if __name__ == '__main__':
-    def simulateSample():
-        fullDeck = ['2♥', '2♦', '2♣', '2♠', '3♥', '3♦', '3♣', '3♠',
-            '4♥', '4♦', '4♣', '4♠', '5♥', '5♦', '5♣', '5♠',
-            '6♥', '6♦', '6♣', '6♠', '7♥', '7♦', '7♣', '7♠',
-            '8♥', '8♦', '8♣', '8♠', '9♥', '9♦', '9♣', '9♠',
-            '10♥', '10♦', '10♣', '10♠', 'j♥', 'j♦', 'j♣', 'j♠',
-            'q♥', 'q♦', 'q♣', 'q♠', 'k♥', 'k♦', 'k♣', 'k♠',
-            'a♥', 'a♦', 'a♣', 'a♠']#
-        simAmmount = [1000] # total amount of files being generated
-        enemyAmount = [4]
-        card_combinations = list(itertools.combinations(fullDeck,2))
-        countYakno = len(card_combinations)
-        percental = -1
-        numro = 0
-        rank_start_time = time.perf_counter() 
-        for countsim in simAmmount:
-            Counter.resetCounter()
-            for h,i in enumerate(card_combinations): #1326
-                for j in enemyAmount:
-                    numro += 1
-                    Counter.current = list(i)
-                    sim(sim=countsim,players=j,speed="instant",inject=True,phase=1,hand=list(i),comm=['a♠', '8♣', 'a♣', 'a♥','2♥'])
-                if h % (countYakno//100) == 0:
-                    print(h,(countYakno//100))
-                    curren = time.perf_counter()
-                    rank_elapsed = curren - rank_start_time
-                    percental += 1
-                    secs,mins = math.modf(rank_elapsed/60)
-                    print(f"Creation {percental}% complete - Current Time Elapsed {int(mins)}:{round(secs*60,2)} ")
-                #print(numro) 
-            print(f"Creation 100% complete")
-            print("Generating files...")
-            Counter.generateFile()
+    if __name__ == '__main__':
+        def simulateSample():
+            fullDeck = ['2♥', '2♦', '2♣', '2♠', '3♥', '3♦', '3♣', '3♠',
+                '4♥', '4♦', '4♣', '4♠', '5♥', '5♦', '5♣', '5♠',
+                '6♥', '6♦', '6♣', '6♠', '7♥', '7♦', '7♣', '7♠',
+                '8♥', '8♦', '8♣', '8♠', '9♥', '9♦', '9♣', '9♠',
+                '10♥', '10♦', '10♣', '10♠', 'j♥', 'j♦', 'j♣', 'j♠',
+                'q♥', 'q♦', 'q♣', 'q♠', 'k♥', 'k♦', 'k♣', 'k♠',
+                'a♥', 'a♦', 'a♣', 'a♠']#
+            simAmmount = [1000] # total amount of files being generated
+            enemyAmount = [4]
+            card_combinations = list(itertools.combinations(fullDeck,2))
+            countYakno = len(card_combinations)
+            percental = -1
+            numro = 0
+            rank_start_time = time.perf_counter() 
+            for countsim in simAmmount:
+                Counter.resetCounter()
+                for h,i in enumerate(card_combinations): #1326
+                    for j in enemyAmount:
+                        numro += 1
+                        Counter.current = list(i)
+                        sim(sim=countsim,players=j,speed="instant",inject=True,phase=1,hand=list(i),comm=['a♠', '8♣', 'a♣', 'a♥','2♥'])
+                    if h % (countYakno//100) == 0:
+                        print(h,(countYakno//100))
+                        curren = time.perf_counter()
+                        rank_elapsed = curren - rank_start_time
+                        percental += 1
+                        secs,mins = math.modf(rank_elapsed/60)
+                        print(f"Creation {percental}% complete - Current Time Elapsed {int(mins)}:{round(secs*60,2)} ")
+                    #print(numro) 
+                print(f"Creation 100% complete")
+                print("Generating files...")
+                Counter.generateFile()
 
-    rank_start_time = time.perf_counter()          
-    simulateSample()
+        rank_start_time = time.perf_counter()          
+        simulateSample()
 
-    rank_end_time = time.perf_counter()
-    rank_elapsed = rank_end_time - rank_start_time
-    print(f"Time elapsed: {rank_elapsed} seconds")
-    print(f"Wins: {Counter.wins} Losses: {Counter.losses} ")
+        rank_end_time = time.perf_counter()
+        rank_elapsed = rank_end_time - rank_start_time
+        print(f"Time elapsed: {rank_elapsed} seconds")
+        print(f"Wins: {Counter.wins} Losses: {Counter.losses} ")

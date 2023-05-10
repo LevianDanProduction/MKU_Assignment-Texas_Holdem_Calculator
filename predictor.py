@@ -261,7 +261,7 @@ if __name__ == '__main__':
         hand2.append(deck1.pop(np.random.randint(0,len(deck1)-1)))
 
 #7♠', 'j♠', '4♣', 'q♣', 'a♦
-    hand2,hand1 = ['5♥', 'a♥'],['k♣', '4♠', 'j♠', 'j♣', 'a♠']
+    #hand2,hand1 = ['5♥', 'a♥'],['k♣', '4♠', 'j♠', 'j♣', 'a♠']
 
     low = lowestBest(hand1,5)
     handscan = futurehand(hand2,hand1,rev=3,convert=False)
