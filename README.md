@@ -12,13 +12,13 @@ The **Texas Hold'em Poker Calculator** is a project designed to simulate poker g
 - **Poker Hand Strength**: Calculates hand strengths using a pre-generated table of all possible poker hands, including tiebreakers.
 - **Prediction Algorithm**: Predicts future poker hand combinations using Monte Carlo simulations, allowing for strategic insights.
 - **User Interface**: Provides a graphical representation of poker scenarios using a GUI built with Pygame.
-- **Data Analysis**: Utilizes Python libraries (Pandas, Numpy) for data manipulation and insights.
+- **Data Analysis**: Utilises Python libraries (Pandas, Numpy) for data manipulation and insights.
 
 ### Tech Stack
 - **Programming**: Python (OOP)
 - **Libraries**: Itertools, Pandas, Pygame, Numpy, Random
 - **Simulations**: Monte Carlo method
-- **Visualization**: Power BI
+- **Visualisation**: Power BI
 
 ### Challenges Addressed
 - **Probabilities in Poker**: Computes win probabilities based on different game states and player hands.
