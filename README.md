@@ -4,6 +4,26 @@
 The documnatation of the porject can be seen here:
 https://github.com/LevianDanProduction/MKU_Assignment-Texas_Holdem_Calculator/blob/main/Project%20Presentation.pdf
 
+### Overview
+The **Texas Hold'em Poker Calculator** is a project designed to simulate poker games and predict outcomes using computational algorithms. The goal is to help players better understand their chances of winning in different situations.
+
+### Key Features
+- **Game Engine**: Simulates Texas Hold'em poker games, dealing with real card combinations and outcomes.
+- **Poker Hand Strength**: Calculates hand strengths using a pre-generated table of all possible poker hands, including tiebreakers.
+- **Prediction Algorithm**: Predicts future poker hand combinations using Monte Carlo simulations, allowing for strategic insights.
+- **User Interface**: Provides a graphical representation of poker scenarios using a GUI built with Pygame.
+- **Data Analysis**: Utilizes Python libraries (Pandas, Numpy) for data manipulation and insights.
+
+### Tech Stack
+- **Programming**: Python (OOP)
+- **Libraries**: Itertools, Pandas, Pygame, Numpy, Random
+- **Simulations**: Monte Carlo method
+- **Visualization**: Power BI
+
+### Challenges Addressed
+- **Probabilities in Poker**: Computes win probabilities based on different game states and player hands.
+- **Game Strategy**: Provides data-driven insights into optimal poker strategies based on simulated game outcomes.
+- **Future Implementations**: Potential additions include folding, betting mechanics, and multi-deck simulations.
 
 Instructions to run:
 
