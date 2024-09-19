@@ -1,7 +1,8 @@
 # MKU_Assignment Texas_Holdem_Calcualtor 
  A probability solver for texas holdem poker
 
-The documnatation of the porject can be seen [Here](Project Presentation.pdf)
+The documnatation of the porject can be seen here:
+https://github.com/LevianDanProduction/MKU_Assignment-Texas_Holdem_Calculator/blob/main/Project%20Presentation.pdf
 
 
 Instructions to run:
