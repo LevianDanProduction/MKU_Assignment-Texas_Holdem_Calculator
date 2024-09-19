@@ -9,7 +9,7 @@ Instructions to run:
 
 GUI 🃏 - need the pickle file from this part to run the others
 
-    0. Make sure any dpependants are installed as well. eg. pygame
+    0. Make sure any dpependants are installed as well. eg. pygame (The requirements here are a bit unclean, will soon have a proper module list)
 
     1. Navigate to tablegen.py
     2. Run the file to generate a data table called card6.csv
