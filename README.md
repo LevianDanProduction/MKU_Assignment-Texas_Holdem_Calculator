@@ -1,6 +1,8 @@
 # MKU_Assignment Texas_Holdem_Calcualtor 
  A probability solver for texas holdem poker
 
+The documnatation of the porject can be seen here:
+
 Instructions to run:
 
 GUI 🃏 - need the pickle file from this part to run the others
